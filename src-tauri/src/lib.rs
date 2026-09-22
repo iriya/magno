@@ -1,10 +1,12 @@
 use rdev::{listen, Event, EventType, Key, Button};
-use std::sync::atomic::{AtomicBool, Ordering};
-use tauri::{Manager, Emitter};
+use std::sync::atomic::{AtomicBool, AtomicI64, Ordering};
+use tauri::{Manager, Emitter, Position, PhysicalPosition};
 use enigo::{Enigo, Key as EnigoKey, KeyboardControllable, MouseControllable};
 
 static CTRL_PRESSED: AtomicBool = AtomicBool::new(false);
 static IS_DRAGGING: AtomicBool = AtomicBool::new(false);
+static MOUSE_X: AtomicI64 = AtomicI64::new(0);
+static MOUSE_Y: AtomicI64 = AtomicI64::new(0);
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -12,13 +14,17 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
             let handle = app.handle().clone();
-            
-            // 启动后台线程监听全局鼠标与键盘
+
             std::thread::spawn(move || {
                 let mut enigo = Enigo::new();
-                
+
                 let callback = move |event: Event| {
                     match event.event_type {
+                        // 1. 实时记录鼠标位置
+                        EventType::MouseMove { x, y } => {
+                            MOUSE_X.store(x as i64, Ordering::SeqCst);
+                            MOUSE_Y.store(y as i64, Ordering::SeqCst);
+                        }
                         EventType::KeyPress(Key::ControlLeft) | EventType::KeyPress(Key::ControlRight) => {
                             CTRL_PRESSED.store(true, Ordering::SeqCst);
                         }
@@ -34,27 +40,32 @@ pub fn run() {
                         EventType::ButtonRelease(Button::Left) => {
                             if CTRL_PRESSED.load(Ordering::SeqCst) && IS_DRAGGING.load(Ordering::SeqCst) {
                                 IS_DRAGGING.store(false, Ordering::SeqCst);
-                                println!("检测到 Ctrl + 划线释放！");
-                                
-                                // 1. 模拟复制 Ctrl + C
+
+                                // 获取当前鼠标释放时的坐标
+                                let current_x = MOUSE_X.load(Ordering::SeqCst) as i32;
+                                let current_y = MOUSE_Y.load(Ordering::SeqCst) as i32;
+
+                                // 2. 模拟复制 Ctrl + C
                                 std::thread::sleep(std::time::Duration::from_millis(50));
                                 enigo.key_down(EnigoKey::Control);
                                 enigo.key_click(EnigoKey::Layout('c'));
                                 enigo.key_up(EnigoKey::Control);
-                                
-                                // 2. 读取剪贴板内容
+
+                                // 3. 读取剪贴板内容并定位显示浮窗
                                 let handle_clone = handle.clone();
                                 std::thread::spawn(move || {
                                     std::thread::sleep(std::time::Duration::from_millis(50));
-                                    // 这里可以通过 tauri clipboard 插件或 arboard 读取，
-                                    // 简化起见，我们通过 Tauri AppHandle 获取剪贴板文本
                                     use tauri_plugin_clipboard_manager::ClipboardExt;
                                     if let Ok(text) = handle_clone.clipboard().read_text() {
                                         let trimmed = text.trim();
                                         if !trimmed.is_empty() {
-                                            println!("成功捕获划词: {}", trimmed);
-                                            // 3. 显示浮窗并把划词内容发给前端
                                             if let Some(window) = handle_clone.get_webview_window("translator") {
+                                                // 设置浮窗位置到鼠标右下方（偏移 15px 避免挡住光标）
+                                                let _ = window.set_position(Position::Physical(PhysicalPosition {
+                                                    x: current_x + 15,
+                                                    y: current_y + 15,
+                                                }));
+
                                                 let _ = window.show();
                                                 let _ = window.set_focus();
                                                 let _ = window.emit("selection-captured", trimmed);
