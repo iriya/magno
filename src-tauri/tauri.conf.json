@@ -12,9 +12,15 @@
   "app": {
     "windows": [
       {
+        "label": "translator",
         "title": "magno",
-        "width": 800,
-        "height": 600
+        "width": 320,
+        "height": 180,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "visible": false,
+        "skipTaskbar": true
       }
     ],
     "security": {
