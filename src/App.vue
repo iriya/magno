@@ -31,7 +31,7 @@ const handleMouseDown = async (e: MouseEvent) => {
 </script>
 
 <template>
-  <div class="h-screen w-screen p-4 bg-zinc-900/95 text-zinc-100 backdrop-blur-md flex flex-col justify-between select-none box-border overflow-hidden rounded-xl border border-zinc-700/80 shadow-2xl">
+  <div class="h-screen w-screen p-4 bg-zinc-900/95 text-zinc-100 backdrop-blur-md flex flex-col justify-between select-none box-border overflow-hidden shadow-2xl">
     <div
         class="flex-shrink-0 cursor-move flex items-center justify-between"
         @mousedown="handleMouseDown"
