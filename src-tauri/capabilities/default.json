@@ -5,6 +5,7 @@
   "windows": ["main","translator"],
   "permissions": [
     "core:default",
+    "core:window:allow-hide",
     "opener:default",
     "clipboard-manager:default"
   ]

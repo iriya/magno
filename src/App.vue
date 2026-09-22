@@ -7,7 +7,6 @@ const selectedText = ref("等待划词...");
 let unlisten: UnlistenFn | null = null;
 
 onMounted(async () => {
-  // 监听 Rust 发来的划词数据
   unlisten = await listen<string>("selection-captured", (event) => {
     console.log("收到后端传来的划词:", event.payload);
     selectedText.value = event.payload;
@@ -26,17 +25,19 @@ const handleClose = async () => {
 </script>
 
 <template>
-  <div class="p-4 bg-zinc-900/95 text-zinc-100 rounded-xl shadow-2xl border border-zinc-700 backdrop-blur-md w-full h-full flex flex-col justify-between select-none">
-    <div>
+  <div class="h-screen w-screen p-4 bg-zinc-900/95 text-zinc-100 backdrop-blur-md flex flex-col justify-between select-none box-border overflow-hidden">
+    <div class="flex-shrink-0">
       <div class="text-xs text-zinc-400 mb-1 flex justify-between items-center">
-        <span>Magno 划词镜</span>
-        <button @click="handleClose" class="hover:text-white cursor-pointer">×</button>
+        <span>Magno 划词翻译</span>
+        <button @click="handleClose" class="hover:text-white cursor-pointer px-1">×</button>
       </div>
-      <div class="text-sm font-medium text-emerald-400 break-words mt-2 bg-zinc-800/50 p-2 rounded border border-zinc-700/50">
+    </div>
+    <div class="flex-1 my-2 overflow-y-auto pr-1">
+      <div class="text-sm font-medium text-emerald-400 break-words bg-zinc-800/50 p-2.5 rounded border border-zinc-700/50">
         {{ selectedText }}
       </div>
     </div>
-    <div class="text-[10px] text-zinc-500 text-right mt-2">
+    <div class="flex-shrink-0 text-[10px] text-zinc-500 text-right">
       按住 Ctrl 划词以捕获
     </div>
   </div>
