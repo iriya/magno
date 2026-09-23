@@ -2,7 +2,7 @@
 
 ---
 
-[简体中文](https://github.com/iriya/magno/master/README.md) | [English](https://github.com/iriya/magno/master/README_EN.md)
+[简体中文](https://github.com/iriya/magno/blob/master/README.md) | [English](https://github.com/iriya/magno/blob/master/README_EN.md)
 
 **Magno** is a lightweight, exquisite, secure, and distribution-friendly desktop word-lookup translation assistant built with `Tauri 2, Rust, and Vue 3`. It aims to provide a seamless and fast translation experience while protecting user API keys with system-level security.
 

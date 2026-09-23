@@ -2,7 +2,7 @@
 
 ---
 
-[简体中文](https://github.com/iriya/magno/master/README.md) | [English](https://github.com/iriya/magno/master/README_EN.md)
+[简体中文](https://github.com/iriya/magno/blob/master/README.md) | [English](https://github.com/iriya/magno/blob/master/README_EN.md)
 
 **Magno** 是一款基于 `Tauri 2 + Rust + Vue 3` 开发的轻量、精致、安全且易于分发的桌面端划词翻译助手。它旨在提供无感、快速的翻译体验，并通过系统级安全凭据保护用户的 API 密钥。
 
