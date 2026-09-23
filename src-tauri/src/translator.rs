@@ -28,9 +28,10 @@ struct Translation {
 /// api_key: 你的谷歌云 API Key
 /// text: 需要翻译的文本
 /// target_lang: 目标语言（例如中文简写 "zh-CN" 或繁体 "zh-TW"）
-pub async fn google_translate(text: &str, target_lang: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let api_key = std::env::var("GOOGLE_TRANSLATE_API_KEY")
-            .map_err(|_| "未找到 GOOGLE_TRANSLATE_API_KEY 环境变量，请检查配置")?;
+pub async fn google_translate(api_key: &str, text: &str, target_lang: &str) -> Result<String, Box<dyn std::error::Error>> {
+    if api_key.is_empty() {
+        return Err("API Key 未设置，请先在设置中填写 Google API Key".into());
+    }
 
     let url = format!(
         "https://translation.googleapis.com/language/translate/v2?key={}",

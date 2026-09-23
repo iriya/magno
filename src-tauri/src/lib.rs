@@ -1,5 +1,7 @@
 mod translator;
 use translator::google_translate;
+mod config;
+use config::{save_api_key, load_api_key, get_saved_api_key};
 
 use rdev::{listen, Event, EventType, Key, Button};
 use std::sync::atomic::{AtomicBool, AtomicI64, Ordering};
@@ -7,6 +9,13 @@ use tauri::{Manager, Emitter, Position, PhysicalPosition};
 use tauri::tray::TrayIconBuilder;
 use tauri::menu::{Menu, MenuItem};
 use enigo::{Enigo, Key as EnigoKey, KeyboardControllable};
+use serde::Serialize;
+
+#[derive(Serialize, Clone)]
+struct TranslationPayload {
+    original: String,
+    translated: String,
+}
 
 static CTRL_PRESSED: AtomicBool = AtomicBool::new(false);
 static DOWN_WITH_CTRL: AtomicBool = AtomicBool::new(false);
@@ -105,8 +114,9 @@ pub fn run() {
                                                 let rt = tokio::runtime::Runtime::new().unwrap();
 
                                                 rt.block_on(async {
+                                                    let api_key = crate::get_saved_api_key(&handle_clone);
                                                 	// 默认翻译为简体中文 "zh-CN"
-                                                	match google_translate(trimmed, "zh-CN").await {
+                                                	match google_translate(&api_key, trimmed, "zh-CN").await {
                                                 	    Ok(translated_text) => {
                                                             if let Some(window) = handle_clone.get_webview_window("translator") {
                                                                 let _ = window.set_position(Position::Physical(PhysicalPosition {
@@ -116,16 +126,22 @@ pub fn run() {
 
                                                                 let _ = window.show();
                                                                 let _ = window.set_focus();
-                                                                // 将翻译后的文本（或者中英对照）发射给前端
-                                                                let _ = window.emit("selection-captured", translated_text);
+                                                                let payload = TranslationPayload {
+                                                                    original: trimmed.to_string(),
+                                                                    translated: translated_text,
+                                                                };
+                                                                let _ = window.emit("selection-captured", payload);
                                                             }
                                                 	    }
                                                 	    Err(e) => {
                                                             println!("翻译请求失败: {}", e);
-                                                            // 失败时也可以降级显示原文
                                                             if let Some(window) = handle_clone.get_webview_window("translator") {
                                                                 let _ = window.show();
-                                                                let _ = window.emit("selection-captured", format!("(翻译失败)\n{}", trimmed));
+                                                                let payload = TranslationPayload {
+                                                                    original: trimmed.to_string(),
+                                                                    translated: format!("(翻译失败: {})", e),
+                                                                };
+                                                                let _ = window.emit("selection-captured", payload);
                                                             }
                                                 	    }
                                                 	}
@@ -144,6 +160,7 @@ pub fn run() {
 
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![save_api_key, load_api_key])
         .run(tauri::generate_context!())
         .expect("error while running magno application");
 }
