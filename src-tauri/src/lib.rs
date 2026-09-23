@@ -1,3 +1,6 @@
+mod translator;
+use translator::google_translate;
+
 use rdev::{listen, Event, EventType, Key, Button};
 use std::sync::atomic::{AtomicBool, AtomicI64, Ordering};
 use tauri::{Manager, Emitter, Position, PhysicalPosition};
@@ -99,17 +102,34 @@ pub fn run() {
                                         if let Ok(text) = handle_clone.clipboard().read_text() {
                                             let trimmed = text.trim();
                                             if !trimmed.is_empty() {
-                                                if let Some(window) = handle_clone.get_webview_window("translator") {
-                                                    // 设置浮窗位置到鼠标右下方（偏移 15px 避免挡住光标）
-                                                    let _ = window.set_position(Position::Physical(PhysicalPosition {
-                                                        x: current_x as i32 + 15,
-                                                        y: current_y as i32 + 15,
-                                                    }));
+                                                let rt = tokio::runtime::Runtime::new().unwrap();
 
-                                                    let _ = window.show();
-                                                    let _ = window.set_focus();
-                                                    let _ = window.emit("selection-captured", trimmed);
-                                                }
+                                                rt.block_on(async {
+                                                	// 默认翻译为简体中文 "zh-CN"
+                                                	match google_translate(trimmed, "zh-CN").await {
+                                                	    Ok(translated_text) => {
+                                                            if let Some(window) = handle_clone.get_webview_window("translator") {
+                                                                let _ = window.set_position(Position::Physical(PhysicalPosition {
+                                                                x: current_x as i32 + 15,
+                                                                y: current_y as i32 + 15,
+                                                                }));
+
+                                                                let _ = window.show();
+                                                                let _ = window.set_focus();
+                                                                // 将翻译后的文本（或者中英对照）发射给前端
+                                                                let _ = window.emit("selection-captured", translated_text);
+                                                            }
+                                                	    }
+                                                	    Err(e) => {
+                                                            println!("翻译请求失败: {}", e);
+                                                            // 失败时也可以降级显示原文
+                                                            if let Some(window) = handle_clone.get_webview_window("translator") {
+                                                                let _ = window.show();
+                                                                let _ = window.emit("selection-captured", format!("(翻译失败)\n{}", trimmed));
+                                                            }
+                                                	    }
+                                                	}
+                                                });
                                             }
                                         }
                                     });
