@@ -22,7 +22,7 @@
 * **System Hooks**: rdev / enigo, keyring
 * **Network**: reqwest (Async HTTP Client)
 
-### 🚀 Quick Start
+### 🚀 Quick Start (for Developers)
 
 Make sure you have Node.js, Rust, and the prerequisites for Tauri 2 installed.
 
@@ -47,3 +47,16 @@ npm run tauri dev
 ```Bash
 npm run tarui build
 ```
+
+### 📖 User Guide
+
+1. **Configure Google API Key**:
+    * After launching the application, click the magnifying glass icon in the system tray to bring up the floating window, or click the settings icon (⚙️) in the upper right corner of the window.
+    * Enter your **Google Cloud Translation API (Basic v2) Key** in the settings panel and click "Save". The API Key will be securely and encrypted stored in the underlying system credential manager (such as Windows Credential Manager or macOS Keychain).
+
+2. **Word-Lookup Translation**:
+    * In any software or webpage, **hold down the `Ctrl` key on your keyboard and select (highlight)** the text you want to translate.
+    * The application will silently capture the clipboard content, automatically request a Google translation, and pop up a floating window near the mouse (or at a designated position), clearly displaying both the "Original" and "Translation" in a **dual-column card layout**.
+
+3. **System Tray Operations**:
+    * Right-click the tray icon to open the menu, which supports quickly waking up the floating window or exiting the application.
