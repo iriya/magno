@@ -1,6 +1,8 @@
 use rdev::{listen, Event, EventType, Key, Button};
 use std::sync::atomic::{AtomicBool, AtomicI64, Ordering};
 use tauri::{Manager, Emitter, Position, PhysicalPosition};
+use tauri::tray::TrayIconBuilder;
+use tauri::menu::{Menu, MenuItem};
 use enigo::{Enigo, Key as EnigoKey, KeyboardControllable};
 
 static CTRL_PRESSED: AtomicBool = AtomicBool::new(false);
@@ -17,6 +19,29 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
             let handle = app.handle().clone();
+            // 托盘菜单
+            let quit_item = MenuItem::with_id(app, "quit", "退出 Magno", true, None::<&str>)?;
+            let show_item = MenuItem::with_id(app, "show", "显示浮窗", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
+            _ = TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .menu(&menu)
+                .show_menu_on_left_click(false)
+                .on_menu_event(move |app, event| {
+                    match event.id.as_ref() {
+                        "quit" => {
+                            app.exit(0);
+                        }
+                        "show" => {
+                            if let Some(window) = app.get_webview_window("translator") {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                        _ => {}
+                    }
+                })
+                .build(app)?;
 
             std::thread::spawn(move || {
                 let mut enigo = Enigo::new();
