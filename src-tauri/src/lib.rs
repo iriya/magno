@@ -38,6 +38,7 @@ pub fn run() {
             _ = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&menu)
+                .tooltip("Magno 划词翻译")
                 .show_menu_on_left_click(false)
                 .on_menu_event(move |app, event| {
                     match event.id.as_ref() {
@@ -60,7 +61,7 @@ pub fn run() {
 
                 let callback = move |event: Event| {
                     match event.event_type {
-                        // 1. 实时记录鼠标位置
+                        // 实时记录鼠标位置
                         EventType::MouseMove { x, y } => {
                             MOUSE_X.store(x as i64, Ordering::SeqCst);
                             MOUSE_Y.store(y as i64, Ordering::SeqCst);
@@ -96,6 +97,7 @@ pub fn run() {
                                 let dy = current_y - start_y;
                                 let distance_squared = dx * dx + dy * dy;
 
+                                // 忽略短位移动作
                                 if distance_squared > 225 {
                                     // 2. 模拟复制 Ctrl + C
                                     std::thread::sleep(std::time::Duration::from_millis(50));
@@ -103,7 +105,7 @@ pub fn run() {
                                     enigo.key_click(EnigoKey::Layout('c'));
                                     enigo.key_up(EnigoKey::Control);
 
-                                    // 3. 读取剪贴板内容并定位显示浮窗
+                                    // 读取剪贴板内容并定位显示浮窗
                                     let handle_clone = handle.clone();
                                     std::thread::spawn(move || {
                                         std::thread::sleep(std::time::Duration::from_millis(50));

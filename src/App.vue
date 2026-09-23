@@ -4,7 +4,6 @@ import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
 
-// 定义后端传过来的数据结构
 interface TranslationData {
   original: string;
   translated: string;
